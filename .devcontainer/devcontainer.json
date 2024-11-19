@@ -1,0 +1,17 @@
+{
+    "name": "DotNet 9 with SQLite",
+    "image": "mcr.microsoft.com/dotnet/sdk:9.0",
+    "postCreateCommand": "dotnet restore",
+    "forwardPorts": [5000, 5001],
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "terminal.integrated.defaultProfile.linux": "bash"
+            },
+            "extensions": ["ms-dotnettools.csharp", "esbenp.prettier-vscode"]
+        }
+    },
+    "mounts": [
+        "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached"
+    ]
+}
