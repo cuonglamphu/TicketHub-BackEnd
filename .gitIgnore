@@ -1,0 +1,9 @@
+Migrations/
+*.db
+*.db.db
+*.db.db.db
+*.db.db.db.db
+*.db.db.db.db.db
+
+bin/
+obj/

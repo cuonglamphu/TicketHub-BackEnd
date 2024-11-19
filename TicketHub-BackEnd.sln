@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.002.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TicketHub-BackEnd", "TicketHub-BackEnd.csproj", "{766D3BC7-E919-4ACC-B2E8-292DA8463FE3}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{766D3BC7-E919-4ACC-B2E8-292DA8463FE3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{766D3BC7-E919-4ACC-B2E8-292DA8463FE3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{766D3BC7-E919-4ACC-B2E8-292DA8463FE3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{766D3BC7-E919-4ACC-B2E8-292DA8463FE3}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0398A6EA-A33E-4F31-ACFB-21A265341DF0}
+	EndGlobalSection
+EndGlobal
