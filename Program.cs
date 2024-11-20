@@ -10,6 +10,10 @@ builder.Services.AddControllers();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite("Data Source=tickethub.db"));
 builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IEventService, EventService>();
+builder.Services.AddScoped<ITicketService, TicketService>();
+builder.Services.AddScoped<ITypeService, TypeService>();
+builder.Services.AddScoped<IPurchaseService, PurchaseService>();
 
 // Add Swagger
 builder.Services.AddEndpointsApiExplorer();
@@ -21,6 +25,9 @@ builder.Services.AddSwaggerGen(c =>
         Version = "v1",
         Description = "API for TicketHub application"
     });
+
+    // Tùy chọn: Thêm cấu hình để xử lý các schema trùng tên
+    c.CustomSchemaIds(type => type.FullName);
 });
 
 // Add CORS

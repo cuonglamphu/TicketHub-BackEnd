@@ -1,5 +1,4 @@
 namespace TicketHub_BackEnd.Models;
-
 public class Category
 {
     public int CatId { get; set; }

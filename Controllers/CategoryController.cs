@@ -36,6 +36,18 @@ namespace TicketHub_BackEnd.Controllers
             return Ok(category);
         }
 
+        // Get by  slug
+        [HttpGet("slug/{slug}")]
+        public async Task<ActionResult<Category>> GetCategoryBySlug(string slug)
+        {
+            var category = await _categoryService.GetCategoryBySlug(slug);
+            if (category == null)
+            {
+                return NotFound();
+            }
+            return Ok(category);
+        }
+
         // POST: api/Category
         [HttpPost]
         public async Task<ActionResult<Category>> CreateCategory(CreateCategoryDto dto)

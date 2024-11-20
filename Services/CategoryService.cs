@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using TicketHub_BackEnd.Data;
 using TicketHub_BackEnd.DTOs;
 using TicketHub_BackEnd.Models;
-using TicketHub_BackEnd.Services;
 
 namespace TicketHub_BackEnd.Services
 {
@@ -23,6 +22,11 @@ namespace TicketHub_BackEnd.Services
         public async Task<Category?> GetCategoryById(int id)
         {
             return await _context.Categories.FindAsync(id);
+        }
+
+        public async Task<Category?> GetCategoryBySlug(string slug)
+        {
+            return await _context.Categories.FirstOrDefaultAsync(c => c.CatSlug == slug);
         }
 
         public async Task<Category> CreateCategory(CreateCategoryDto dto)

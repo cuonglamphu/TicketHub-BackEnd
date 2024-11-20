@@ -7,6 +7,7 @@ namespace TicketHub_BackEnd.Services
     {
         Task<IEnumerable<Category>> GetAllCategories();
         Task<Category?> GetCategoryById(int id);
+        Task<Category?> GetCategoryBySlug(string slug);
         Task<Category> CreateCategory(CreateCategoryDto dto);
         Task<bool> UpdateCategory(int id, UpdateCategoryDto dto);
         Task<bool> DeleteCategory(int id);
