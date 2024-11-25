@@ -175,7 +175,7 @@ public class AppDbContext : DbContext
                 LastName = "System",
                 UserEmail = "admin@tickethub.com",
                 // Hash password admin123
-                UserPassword = "$2a$12$GX978eWkUWx2Tc1Q22fR3.wocKpiLKOCJZQs2w9DNddlE7QBeEek2",
+                UserPassword = "$2a$12$nt/QKdSvcg2VXDfKptogKuwvd5lV8Tw0MfopvgHRRGcTgToIgDZjS",
                 UserRole = "admin",
                 UserJoinDate = new DateTime(2024, 1, 1)
             },

@@ -161,7 +161,6 @@ namespace TicketHub_BackEnd.Services
 
         public async Task<IEnumerable<Event>> GetRecommendedEvents(int userId)
         {
-
             var now = DateTime.UtcNow;
 
             // Lấy lịch sử mua vé của user với thông tin chi tiết
@@ -202,7 +201,6 @@ namespace TicketHub_BackEnd.Services
                 })
                 .ToList();
 
-            // Phân tích thời gian tham gia sự kiện ưa thích
             var preferredEventTimes = userPurchaseHistory
                 .Select(h => h.EventTime.TimeOfDay)
                 .ToList();
@@ -217,11 +215,11 @@ namespace TicketHub_BackEnd.Services
                 .Select(e => new
                 {
                     Event = e,
-                    DaysUntil = EF.Functions.DateDiffDay(now, e.EveTimestart)
+                    DaysUntil = (int)(e.EveTimestart - now).TotalDays
                 })
                 .ToListAsync();
 
-            // Tính điểm chi tiết cho mỗi sự kiện
+            // Tính điểm và sắp xếp
             var scoredEvents = upcomingEvents
                 .Select(e => new
                 {
