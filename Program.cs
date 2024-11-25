@@ -2,11 +2,16 @@ using Microsoft.EntityFrameworkCore;
 using TicketHub_BackEnd.Data;
 using Microsoft.OpenApi.Models;
 using TicketHub_BackEnd.Services;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    });
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite("Data Source=tickethub.db"));
 builder.Services.AddScoped<ICategoryService, CategoryService>();
@@ -14,6 +19,9 @@ builder.Services.AddScoped<IEventService, EventService>();
 builder.Services.AddScoped<ITicketService, TicketService>();
 builder.Services.AddScoped<ITypeService, TypeService>();
 builder.Services.AddScoped<IPurchaseService, PurchaseService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IStatisticsService, StatisticsService>();
+builder.Services.AddScoped<ISaleService, SaleService>();
 
 // Add Swagger
 builder.Services.AddEndpointsApiExplorer();

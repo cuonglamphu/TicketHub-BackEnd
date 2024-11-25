@@ -11,5 +11,9 @@ namespace TicketHub_BackEnd.Services
         Task<Event> CreateEvent(CreateEventDto dto);
         Task<bool> UpdateEvent(int id, UpdateEventDto dto);
         Task<bool> DeleteEvent(int id);
+        Task<IEnumerable<Event>> GetHotEvents();
+        Task<IEnumerable<Event>> GetRecommendedEvents(int userId);
+
+        Task<IEnumerable<Event>> SearchEvents(string keyword, int catId, string city, DateTime startDate);
     }
 }

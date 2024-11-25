@@ -74,22 +74,33 @@ namespace TicketHub_BackEnd.Services
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                // Get ticket and validate availability
+                // Get ticket with related data
                 var ticket = await _context.Tickets
+                    .Include(t => t.Event)
+                    .Include(t => t.Type)
                     .FirstOrDefaultAsync(t => t.TicketId == purchase.TicketId);
 
                 if (ticket == null)
                     throw new KeyNotFoundException($"Ticket with ID {purchase.TicketId} not found");
 
+                // Kiểm tra số lượng vé còn đủ không
                 if (ticket.TicketQty < purchase.Quantity)
-                    throw new InvalidOperationException("Not enough tickets available");
+                    throw new InvalidOperationException($"Không đủ vé! Chỉ còn {ticket.TicketQty} vé cho sự kiện {ticket.Event?.EveName}");
+
+                // Verify user exists
+                var user = await _context.Users.FindAsync(userId);
+                if (user == null)
+                    throw new KeyNotFoundException($"User with ID {userId} not found");
+
+                // Calculate total
+                decimal total = ticket.TicketPrice * purchase.Quantity;
 
                 // Create new sale
                 var sale = new Sale
                 {
                     UserId = userId,
                     SaleDate = DateTime.UtcNow,
-                    SaleTotal = ticket.TicketPrice * purchase.Quantity
+                    SaleTotal = total
                 };
 
                 _context.Sales.Add(sale);
@@ -105,13 +116,17 @@ namespace TicketHub_BackEnd.Services
 
                 _context.Purchases.Add(purchaseRecord);
 
-                // Update ticket quantity
-                ticket.TicketQty -= purchase.Quantity;
+                // Trừ số lượng vé
+                ticket.TicketQty = ticket.TicketQty - purchase.Quantity;
+                _context.Tickets.Update(ticket); // Đảm bảo cập nhật ticket
+
+                // Log để debug
+                Console.WriteLine($"Số lượng vé còn lại sau khi mua: {ticket.TicketQty}");
 
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                // Return purchase response
+                // Return purchase response with full details
                 return new PurchaseResponseDto
                 {
                     SaleId = sale.SaleId,
@@ -122,16 +137,23 @@ namespace TicketHub_BackEnd.Services
                         new PurchaseDetailDto
                         {
                             TicketId = ticket.TicketId,
+                            EventName = ticket.Event?.EveName ?? "Unknown Event",
+                            EventCity = ticket.Event?.EveCity ?? "Unknown City",
+                            EventTimeStart = ticket.Event?.EveTimestart ?? DateTime.MinValue,
+                            EventThumb = ticket.Event?.EveThumb ?? "",
+                            TicketType = ticket.Type?.TypeName ?? "Unknown Type",
                             Quantity = purchase.Quantity,
                             Price = ticket.TicketPrice,
-                            Total = sale.SaleTotal
+                            Total = total
                         }
                     }
                 };
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 await transaction.RollbackAsync();
+                // Log lỗi để debug
+                Console.WriteLine($"Error during purchase: {ex.Message}");
                 throw;
             }
         }

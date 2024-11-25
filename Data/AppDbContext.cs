@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using TicketHub_BackEnd.Models;
+using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 namespace TicketHub_BackEnd.Data;
 
 
@@ -21,8 +22,31 @@ public class AppDbContext : DbContext
 
     public DbSet<User> Users { get; set; }
 
+
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        if (Database.IsSqlite())
+        {
+            var methodInfo = typeof(DbFunctions).GetMethod("DateDiffDay", new[] { typeof(DateTime?), typeof(DateTime?) });
+            if (methodInfo != null)
+            {
+                modelBuilder.HasDbFunction(methodInfo)
+                    .HasTranslation(args =>
+                        new SqlFunctionExpression(
+                            "julianday",
+                            new[] {
+                                args[1],  // end date
+                                new SqlFragmentExpression("-"),
+                                args[0]   // start date
+                            },
+                            nullable: true,
+                            argumentsPropagateNullability: new[] { true, true, true },
+                            typeof(int?),
+                            typeMapping: null));
+            }
+        }
+
         modelBuilder.Entity<Category>()
             .HasKey(c => c.CatId);
 
@@ -86,7 +110,7 @@ public class AppDbContext : DbContext
                 CatName = "Sports",
                 CatSlug = "sports",
                 CatDesc = "Sporting events",
-                CatThumb = "https://salt.tkbcdn.com/ts/ds/9e/ab/87/cf3513a86027d31026f5be1e866895c3.png"
+                CatThumb = "https://images.tkbcdn.com/2/608/332/ts/ds/9b/70/96/4d368a40fbbe70184a6278a0f3361506.jpg"
             }
         );
 
@@ -111,7 +135,7 @@ public class AppDbContext : DbContext
                 EveCity = "Los Angeles",
                 EveTimestart = new DateTime(2024, 6, 10, 20, 0, 0),
                 EveTimeend = new DateTime(2024, 6, 10, 23, 0, 0),
-                EveThumb = "https://salt.tkbcdn.com/ts/ds/9e/ab/87/cf3513a86027d31026f5be1e866895c3.png",
+                EveThumb = "https://salt.tkbcdn.com/ts/ds/ed/d1/30/00f0fbc999f8a4dedf030f9e3c7b27db.jpg",
                 CatId = 2
             }
         );
@@ -147,8 +171,11 @@ public class AppDbContext : DbContext
             {
                 UserId = 1,
                 UserName = "admin",
+                FirstName = "Admin",
+                LastName = "System",
                 UserEmail = "admin@tickethub.com",
-                UserPassword = "admin123",
+                // Hash password admin123
+                UserPassword = "$2a$12$GX978eWkUWx2Tc1Q22fR3.wocKpiLKOCJZQs2w9DNddlE7QBeEek2",
                 UserRole = "admin",
                 UserJoinDate = new DateTime(2024, 1, 1)
             },
@@ -156,8 +183,11 @@ public class AppDbContext : DbContext
             {
                 UserId = 2,
                 UserName = "john_doe",
+                FirstName = "John",
+                LastName = "Doe",
                 UserEmail = "john@example.com",
-                UserPassword = "user123",
+                // Hash password user123
+                UserPassword = "$2a$12$tSzglqCkPC3HdsYCq36jfOumHrF/A1xP1DKPNhC2TzMBFhJmhNuuC",
                 UserRole = "user",
                 UserJoinDate = new DateTime(2024, 1, 1)
             }

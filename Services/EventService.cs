@@ -3,6 +3,7 @@ using TicketHub_BackEnd.Data;
 using TicketHub_BackEnd.Models;
 using TicketHub_BackEnd.DTOs;
 using TicketHub_BackEnd.Services;
+using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 
 namespace TicketHub_BackEnd.Services
 {
@@ -90,6 +91,194 @@ namespace TicketHub_BackEnd.Services
             _context.Events.Remove(@event);
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        public async Task<IEnumerable<Event>> GetHotEvents()
+        {
+            var now = DateTime.Now;
+
+            // Debug: Kiểm tra số lượng events tổng cộng
+            var totalEvents = await _context.Events.CountAsync();
+            Console.WriteLine($"Total events: {totalEvents}");
+
+            // Lấy tất cả các sự kiện sắp diễn ra và include Category
+            var eventsWithTickets = await _context.Events
+                .Include(e => e.Category)
+                .Include(e => e.Tickets)
+                .Where(e => e.EveTimestart > now)  // Chỉ lấy sự kiện chưa diễn ra
+                .Select(e => new
+                {
+                    Event = e,
+                    TicketCount = e.Tickets.Count(),
+                    DaysUntilEvent = (int)(e.EveTimestart - now).TotalDays
+                })
+                .ToListAsync();
+
+            // Debug: Kiểm tra số lượng events sắp diễn ra
+            Console.WriteLine($"Upcoming events: {eventsWithTickets.Count}");
+
+            // Nếu không có sự kiện nào sắp diễn ra, lấy 5 sự kiện gần nhất
+            if (!eventsWithTickets.Any())
+            {
+                return await _context.Events
+                    .Include(e => e.Category)
+                    .OrderByDescending(e => e.EveTimestart)
+                    .Take(6)
+                    .ToListAsync();
+            }
+
+            var result = eventsWithTickets
+                .Select(e => new
+                {
+                    Event = e.Event,
+                    Score = (e.TicketCount * 0.4) +
+                           (1.0 / (Math.Abs(e.DaysUntilEvent) + 1) * 0.6)
+                })
+                .OrderByDescending(x => x.Score)
+                .Take(6)
+                .Select(x => x.Event)
+                .ToList();
+
+            // Debug: Kiểm tra số lượng kết quả cuối cùng
+            Console.WriteLine($"Final results: {result.Count}");
+
+            return result;
+        }
+
+        // Thêm các class để lưu trữ preferences
+        private class CategoryPreference
+        {
+            public int CategoryId { get; set; }
+            public double Weight { get; set; }
+            public DateTime RecentPurchase { get; set; }
+        }
+
+        private class CityPreference
+        {
+            public string City { get; set; }
+            public double Weight { get; set; }
+        }
+
+        public async Task<IEnumerable<Event>> GetRecommendedEvents(int userId)
+        {
+
+            var now = DateTime.UtcNow;
+
+            // Lấy lịch sử mua vé của user với thông tin chi tiết
+            var userPurchaseHistory = await _context.Sales
+                .Where(s => s.UserId == userId)
+                .SelectMany(s => s.Purchases)
+                .Select(p => new
+                {
+                    CategoryId = p.Ticket.Event.CatId,
+                    City = p.Ticket.Event.EveCity,
+                    EventTime = p.Ticket.Event.EveTimestart,
+                    PurchaseDate = p.Sale.SaleDate
+                })
+                .ToListAsync();
+
+            if (!userPurchaseHistory.Any())
+            {
+                return await GetHotEvents();
+            }
+
+            // Phân tích thói quen người dùng
+            var categoryPreferences = userPurchaseHistory
+                .GroupBy(h => h.CategoryId)
+                .Select(g => new CategoryPreference
+                {
+                    CategoryId = g.Key,
+                    Weight = g.Count() * (1.0 / userPurchaseHistory.Count),
+                    RecentPurchase = g.Max(x => x.PurchaseDate)
+                })
+                .ToList();
+
+            var cityPreferences = userPurchaseHistory
+                .GroupBy(h => h.City)
+                .Select(g => new CityPreference
+                {
+                    City = g.Key,
+                    Weight = g.Count() * (1.0 / userPurchaseHistory.Count)
+                })
+                .ToList();
+
+            // Phân tích thời gian tham gia sự kiện ưa thích
+            var preferredEventTimes = userPurchaseHistory
+                .Select(h => h.EventTime.TimeOfDay)
+                .ToList();
+            var avgPreferredTime = new TimeSpan(
+                (long)preferredEventTimes.Average(t => t.Ticks)
+            );
+
+            // Lấy các sự kiện sắp diễn ra
+            var upcomingEvents = await _context.Events
+                .Include(e => e.Category)
+                .Where(e => e.EveTimestart > now)
+                .Select(e => new
+                {
+                    Event = e,
+                    DaysUntil = EF.Functions.DateDiffDay(now, e.EveTimestart)
+                })
+                .ToListAsync();
+
+            // Tính điểm chi tiết cho mỗi sự kiện
+            var scoredEvents = upcomingEvents
+                .Select(e => new
+                {
+                    Event = e.Event,
+                    Score = CalculateEventScore(
+                        e.Event,
+                        e.DaysUntil,
+                        categoryPreferences,
+                        cityPreferences,
+                        avgPreferredTime
+                    )
+                })
+                .OrderByDescending(x => x.Score)
+                .Take(6)
+                .Select(x => x.Event)
+                .ToList();
+
+            return scoredEvents.Any() ? scoredEvents : await GetHotEvents();
+        }
+
+        private double CalculateEventScore(
+            Event evt,
+            int daysUntil,
+            List<CategoryPreference> categoryPreferences,
+            List<CityPreference> cityPreferences,
+            TimeSpan avgPreferredTime)
+        {
+            // 1. Category Score (35%)
+            var categoryScore = categoryPreferences
+                .Where(c => c.CategoryId == evt.CatId)
+                .Select(c => c.Weight * (1 +
+                    Math.Exp(-0.1 * (DateTime.UtcNow - c.RecentPurchase).TotalDays)))
+                .FirstOrDefault();
+
+            // 2. City Score (25%)
+            var cityScore = cityPreferences
+                .Where(c => c.City == evt.EveCity)
+                .Select(c => c.Weight)
+                .FirstOrDefault();
+
+            // 3. Time Preference Score (20%)
+            var timeScore = 1.0 - (Math.Abs((evt.EveTimestart.TimeOfDay - avgPreferredTime).TotalHours) / 24.0);
+
+            // 4. Proximity Score (20%)
+            var proximityScore = 1.0 / (Math.Abs(daysUntil) + 1);
+
+            return (categoryScore * 0.35) +
+                   (cityScore * 0.25) +
+                   (timeScore * 0.20) +
+                   (proximityScore * 0.20);
+        }
+
+        public async Task<IEnumerable<Event>> SearchEvents(string keyword, int catId, string city, DateTime startDate)
+        {
+            return await _context.Events
+                .Where(e => e.EveName.Contains(keyword) || e.EveDesc.Contains(keyword))
+                .ToListAsync();
         }
     }
 }

@@ -69,5 +69,26 @@ namespace TicketHub.Controllers
             }
             return NoContent();
         }
+
+        [HttpGet("recommended/{userId}")]
+        public async Task<ActionResult<IEnumerable<Event>>> GetRecommendedEvents(int userId)
+        {
+            var events = await _eventService.GetRecommendedEvents(userId);
+            return Ok(events);
+        }
+
+        [HttpGet("hot")]
+        public async Task<ActionResult<IEnumerable<Event>>> GetHotEvents()
+        {
+            var events = await _eventService.GetHotEvents();
+            return Ok(events);
+        }
+
+        [HttpGet("search")]
+        public async Task<ActionResult<IEnumerable<Event>>> SearchEvents(string keyword, int catId, string city, DateTime startDate, DateTime endDate)
+        {
+            var events = await _eventService.SearchEvents(keyword, catId, city, startDate);
+            return Ok(events);
+        }
     }
 }
