@@ -2,8 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using TicketHub_BackEnd.Data;
 using TicketHub_BackEnd.Models;
 using TicketHub_BackEnd.DTOs;
-using TicketHub_BackEnd.Services;
-using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 
 namespace TicketHub_BackEnd.Services
 {
@@ -155,7 +153,7 @@ namespace TicketHub_BackEnd.Services
 
         private class CityPreference
         {
-            public string City { get; set; }
+            public string City { get; set; } = string.Empty;
             public double Weight { get; set; }
         }
 
@@ -163,16 +161,15 @@ namespace TicketHub_BackEnd.Services
         {
             var now = DateTime.UtcNow;
 
-            // Lấy lịch sử mua vé của user với thông tin chi tiết
             var userPurchaseHistory = await _context.Sales
                 .Where(s => s.UserId == userId)
-                .SelectMany(s => s.Purchases)
+                .SelectMany(s => s.Purchases.Where(p => p.Ticket != null))
                 .Select(p => new
                 {
-                    CategoryId = p.Ticket.Event.CatId,
-                    City = p.Ticket.Event.EveCity,
-                    EventTime = p.Ticket.Event.EveTimestart,
-                    PurchaseDate = p.Sale.SaleDate
+                    CategoryId = p.Ticket!.Event != null ? p.Ticket.Event.CatId : 0,
+                    City = p.Ticket!.Event != null ? p.Ticket.Event.EveCity : string.Empty,
+                    EventTime = p.Ticket!.Event != null ? p.Ticket.Event.EveTimestart : DateTime.MinValue,
+                    PurchaseDate = p.Sale != null ? p.Sale.SaleDate : DateTime.MinValue
                 })
                 .ToListAsync();
 

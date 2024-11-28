@@ -28,6 +28,5 @@ namespace TicketHub_BackEnd.Models
         public int TypeId { get; set; }
         public Type? Type { get; set; }
 
-        // public ICollection<Purchase> Purchases { get; set; } = new List<Purchase>();
     }
 }

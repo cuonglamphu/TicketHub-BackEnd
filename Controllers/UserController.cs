@@ -28,8 +28,6 @@ namespace TicketHub_BackEnd.Controllers
                 {
                     return BadRequest(result);
                 }
-
-                // Trả về 201 Created với thông tin user đã đăng nhập
                 return StatusCode(201, result);
             }
             catch (Exception ex)

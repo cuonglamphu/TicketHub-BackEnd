@@ -31,9 +31,9 @@ namespace TicketHub_BackEnd.Services
                 .ToListAsync();
         }
 
-        public async Task<TypeResponseDto?> GetTypeById(int id)
+        public async Task<TypeResponseDto> GetTypeById(int id)
         {
-            return await _context.Types
+            var result = await _context.Types
                 .Where(t => t.TypeId == id)
                 .Select(t => new TypeResponseDto
                 {
@@ -43,6 +43,11 @@ namespace TicketHub_BackEnd.Services
                     EventId = t.EventId,
                 })
                 .FirstOrDefaultAsync();
+
+            if (result == null)
+                throw new KeyNotFoundException($"Không tìm thấy type với id: {id}");
+
+            return result;
         }
 
         public async Task<IEnumerable<TypeResponseDto>> GetTypesByEvent(int eventId)
@@ -59,7 +64,7 @@ namespace TicketHub_BackEnd.Services
                 .ToListAsync();
         }
 
-        public async Task<TypeResponseDto?> UpdateType(int id, UpdateTypeDto dto)
+        public async Task<TypeResponseDto> UpdateType(int id, UpdateTypeDto dto)
         {
             try
             {
@@ -69,13 +74,21 @@ namespace TicketHub_BackEnd.Services
 
                 type.TypeName = dto.TypeName;
                 type.TypeDesc = dto.TypeDesc;
+                type.EventId = dto.EventId;
 
                 await _context.SaveChangesAsync();
-                return await GetTypeById(id);
+
+                return new TypeResponseDto
+                {
+                    TypeId = type.TypeId,
+                    TypeName = type.TypeName,
+                    TypeDesc = type.TypeDesc,
+                    EventId = type.EventId
+                };
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw new Exception($"Lỗi khi cập nhật type: {ex.Message}");
+                throw;
             }
         }
 
@@ -119,9 +132,16 @@ namespace TicketHub_BackEnd.Services
         public async Task<TypeResponseDto> GetTypeByTicket(int ticketId)
         {
             var type = await _context.Types.FindAsync(ticketId);
-            return new TypeResponseDto { TypeId = type.TypeId, TypeName = type.TypeName, TypeDesc = type.TypeDesc, EventId = type.EventId };
+            if (type == null)
+                throw new KeyNotFoundException($"Không tìm thấy type với id: {ticketId}");
+
+            return new TypeResponseDto
+            {
+                TypeId = type.TypeId,
+                TypeName = type.TypeName,
+                TypeDesc = type.TypeDesc,
+                EventId = type.EventId
+            };
         }
-
-
     }
 }

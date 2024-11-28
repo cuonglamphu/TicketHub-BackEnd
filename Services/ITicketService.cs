@@ -11,8 +11,7 @@ namespace TicketHub_BackEnd.Services
         Task<Ticket> CreateTicket(CreateTicketDto dto);
 
         Task<Ticket> DeleteTicket(int id);
-        Task<Ticket> UpdateTicket(int id, UpdateTicketDto dto);         
-        // Task<Sale> PurchaseTicket(int userId, PurchaseTicketDto dto);
+        Task<Ticket> UpdateTicket(int id, UpdateTicketDto dto);
         Task<PurchaseResponseDto> PurchaseTicket(int userId, CreatePurchaseDto purchase);
     }
 }

@@ -19,5 +19,11 @@ namespace TicketHub_BackEnd.Models
         public User? User { get; set; }
 
         public ICollection<Purchase> Purchases { get; set; } = new List<Purchase>();
+
+        public string? IpAddress { get; set; }
+
+        public string? DeviceInfo { get; set; }
+
+        public string? BrowserInfo { get; set; }
     }
 }

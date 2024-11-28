@@ -2,8 +2,15 @@ namespace TicketHub_BackEnd.DTOs
 {
     public class CreatePurchaseDto
     {
+
         public int TicketId { get; set; }
         public int Quantity { get; set; }
+
+        public string IpAddress { get; set; } = string.Empty;
+
+        public string DeviceInfo { get; set; } = string.Empty;
+
+        public string BrowserInfo { get; set; } = string.Empty;
     }
 
     public class PurchaseResponseDto

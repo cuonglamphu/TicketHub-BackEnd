@@ -79,7 +79,11 @@ namespace TicketHub_BackEnd.Services
             return (
                 Amount: sales.Sum(s => s.SaleTotal),
                 TicketsSold: sales.Sum(s => s.Purchases.Sum(p => p.Quantity)),
-                EventCount: sales.SelectMany(s => s.Purchases).Select(p => p.Ticket.EveId).Distinct().Count()
+                EventCount: sales.SelectMany(s => s.Purchases)
+                    .Where(p => p.Ticket?.EveId != null)
+                    .Select(p => p.Ticket!.EveId)
+                    .Distinct()
+                    .Count()
             );
         }
 
@@ -191,7 +195,5 @@ namespace TicketHub_BackEnd.Services
                 Change = Math.Round(currentGrowthRate - targetGrowthRate, 2)
             };
         }
-
-        // Implement các phương thức helper khác...
     }
 }

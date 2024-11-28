@@ -13,7 +13,7 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
     });
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite("Data Source=tickethub.db"));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IEventService, EventService>();
 builder.Services.AddScoped<ITicketService, TicketService>();

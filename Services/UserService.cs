@@ -109,15 +109,15 @@ namespace TicketHub_BackEnd.Services
                     UserEmail = u.UserEmail,
                     UserRole = u.UserRole,
                     UserJoinDate = u.UserJoinDate,
-                    TotalTickets = u.Sales
-                        .SelectMany(s => s.Purchases)
-                        .Sum(p => p.Quantity),
-                    TotalSpent = u.Sales
-                        .SelectMany(s => s.Purchases)
-                        .Sum(p => p.Quantity * p.Ticket.TicketPrice)
+                    TotalTickets = (u.Sales != null) ?
+                        u.Sales.Sum(s => (s.Purchases != null) ?
+                            s.Purchases.Where(p => p != null).Sum(p => p.Quantity) : 0) : 0,
+                    TotalSpent = (u.Sales != null) ?
+                        u.Sales.Sum(s => (s.Purchases != null) ?
+                            s.Purchases.Where(p => p != null && p.Ticket != null)
+                                .Sum(p => p.Quantity * p.Ticket!.TicketPrice) : 0) : 0
                 })
                 .FirstOrDefaultAsync();
-
         }
 
         public async Task<IEnumerable<UserResponseDto>> GetAllUsers()
@@ -137,12 +137,13 @@ namespace TicketHub_BackEnd.Services
                     UserEmail = u.UserEmail,
                     UserRole = u.UserRole,
                     UserJoinDate = u.UserJoinDate,
-                    TotalTickets = u.Sales
-                        .SelectMany(s => s.Purchases)
-                        .Sum(p => p.Quantity),
-                    TotalSpent = u.Sales
-                        .SelectMany(s => s.Purchases)
-                        .Sum(p => p.Quantity * p.Ticket.TicketPrice)
+                    TotalTickets = (u.Sales != null) ?
+                        u.Sales.Sum(s => (s.Purchases != null) ?
+                            s.Purchases.Where(p => p != null).Sum(p => p.Quantity) : 0) : 0,
+                    TotalSpent = (u.Sales != null) ?
+                        u.Sales.Sum(s => (s.Purchases != null) ?
+                            s.Purchases.Where(p => p != null && p.Ticket != null)
+                                .Sum(p => p.Quantity * p.Ticket!.TicketPrice) : 0) : 0
                 })
                 .ToListAsync();
         }

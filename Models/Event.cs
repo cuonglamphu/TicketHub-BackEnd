@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using TicketHub_BackEnd.Models;
 
 namespace TicketHub_BackEnd.Models
 {

@@ -1,5 +1,4 @@
 using TicketHub_BackEnd.DTOs;
-using TicketHub_BackEnd.Models;
 
 namespace TicketHub_BackEnd.Services
 {

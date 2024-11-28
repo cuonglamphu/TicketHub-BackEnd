@@ -24,6 +24,7 @@ namespace TicketHub_BackEnd.Services
     {
         public string TypeName { get; set; } = string.Empty;
         public string TypeDesc { get; set; } = string.Empty;
+        public int EventId { get; set; }
     }
 
     public class TypeDto

@@ -54,6 +54,9 @@ namespace TicketHub_BackEnd.Services
         public async Task<Ticket> DeleteTicket(int id)
         {
             var ticket = await _context.Tickets.FindAsync(id);
+            if (ticket == null)
+                throw new KeyNotFoundException($"Ticket with ID {id} not found");
+
             _context.Tickets.Remove(ticket);
             await _context.SaveChangesAsync();
             return ticket;
@@ -74,7 +77,6 @@ namespace TicketHub_BackEnd.Services
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                // Get ticket with related data
                 var ticket = await _context.Tickets
                     .Include(t => t.Event)
                     .Include(t => t.Type)
@@ -87,20 +89,20 @@ namespace TicketHub_BackEnd.Services
                 if (ticket.TicketQty < purchase.Quantity)
                     throw new InvalidOperationException($"Không đủ vé! Chỉ còn {ticket.TicketQty} vé cho sự kiện {ticket.Event?.EveName}");
 
-                // Verify user exists
                 var user = await _context.Users.FindAsync(userId);
                 if (user == null)
                     throw new KeyNotFoundException($"User with ID {userId} not found");
 
-                // Calculate total
                 decimal total = ticket.TicketPrice * purchase.Quantity;
 
-                // Create new sale
                 var sale = new Sale
                 {
                     UserId = userId,
                     SaleDate = DateTime.UtcNow,
-                    SaleTotal = total
+                    SaleTotal = total,
+                    BrowserInfo = purchase.BrowserInfo,
+                    DeviceInfo = purchase.DeviceInfo,
+                    IpAddress = purchase.IpAddress
                 };
 
                 _context.Sales.Add(sale);
