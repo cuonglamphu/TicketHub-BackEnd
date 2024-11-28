@@ -96,56 +96,62 @@ namespace TicketHub_BackEnd.Services
         // Implement các phương thức khác của interface
         public async Task<UserResponseDto?> GetUserById(int id)
         {
-            return await _context.Users
-                .Where(u => u.UserId == id)
-                .Select(u => new UserResponseDto
-                {
-                    Status = "success",
-                    Message = "User retrieved successfully",
-                    UserId = u.UserId,
-                    UserName = u.UserName,
-                    FirstName = u.FirstName,
-                    LastName = u.LastName,
-                    UserEmail = u.UserEmail,
-                    UserRole = u.UserRole,
-                    UserJoinDate = u.UserJoinDate,
-                    TotalTickets = (u.Sales != null) ?
-                        u.Sales.Sum(s => (s.Purchases != null) ?
-                            s.Purchases.Where(p => p != null).Sum(p => p.Quantity) : 0) : 0,
-                    TotalSpent = (u.Sales != null) ?
-                        u.Sales.Sum(s => (s.Purchases != null) ?
-                            s.Purchases.Where(p => p != null && p.Ticket != null)
-                                .Sum(p => p.Quantity * p.Ticket!.TicketPrice) : 0) : 0
-                })
-                .FirstOrDefaultAsync();
+            var user = await _context.Users
+                .Include(u => u.Sales)
+                    .ThenInclude(s => s.Purchases)
+                        .ThenInclude(p => p.Ticket)
+                .FirstOrDefaultAsync(u => u.UserId == id);
+
+            if (user == null) return null;
+
+            return new UserResponseDto
+            {
+                Status = "success",
+                Message = "User retrieved successfully",
+                UserId = user.UserId,
+                UserName = user.UserName,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                UserEmail = user.UserEmail,
+                UserRole = user.UserRole,
+                UserJoinDate = user.UserJoinDate,
+                TotalTickets = user.Sales?
+                    .SelectMany(s => s.Purchases ?? Enumerable.Empty<Purchase>())
+                    .Sum(p => p.Quantity) ?? 0,
+                TotalSpent = user.Sales?
+                    .SelectMany(s => s.Purchases ?? Enumerable.Empty<Purchase>())
+                    .Where(p => p.Ticket != null)
+                    .Sum(p => p.Quantity * p.Ticket!.TicketPrice) ?? 0
+            };
         }
 
         public async Task<IEnumerable<UserResponseDto>> GetAllUsers()
         {
-            return await _context.Users
+            var users = await _context.Users
                 .Include(u => u.Sales)
                     .ThenInclude(s => s.Purchases)
                         .ThenInclude(p => p.Ticket)
-                .Select(u => new UserResponseDto
-                {
-                    Status = "success",
-                    Message = "Users retrieved successfully",
-                    UserId = u.UserId,
-                    UserName = u.UserName,
-                    FirstName = u.FirstName,
-                    LastName = u.LastName,
-                    UserEmail = u.UserEmail,
-                    UserRole = u.UserRole,
-                    UserJoinDate = u.UserJoinDate,
-                    TotalTickets = (u.Sales != null) ?
-                        u.Sales.Sum(s => (s.Purchases != null) ?
-                            s.Purchases.Where(p => p != null).Sum(p => p.Quantity) : 0) : 0,
-                    TotalSpent = (u.Sales != null) ?
-                        u.Sales.Sum(s => (s.Purchases != null) ?
-                            s.Purchases.Where(p => p != null && p.Ticket != null)
-                                .Sum(p => p.Quantity * p.Ticket!.TicketPrice) : 0) : 0
-                })
                 .ToListAsync();
+
+            return users.Select(u => new UserResponseDto
+            {
+                Status = "success",
+                Message = "Users retrieved successfully",
+                UserId = u.UserId,
+                UserName = u.UserName,
+                FirstName = u.FirstName,
+                LastName = u.LastName,
+                UserEmail = u.UserEmail,
+                UserRole = u.UserRole,
+                UserJoinDate = u.UserJoinDate,
+                TotalTickets = u.Sales?
+                    .SelectMany(s => s.Purchases ?? Enumerable.Empty<Purchase>())
+                    .Sum(p => p.Quantity) ?? 0,
+                TotalSpent = u.Sales?
+                    .SelectMany(s => s.Purchases ?? Enumerable.Empty<Purchase>())
+                    .Where(p => p.Ticket != null)
+                    .Sum(p => p.Quantity * p.Ticket!.TicketPrice) ?? 0
+            });
         }
 
         public async Task<UserResponseDto?> UpdateUser(int id, UpdateUserDto dto)
