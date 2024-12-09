@@ -121,7 +121,8 @@ namespace TicketHub_BackEnd.Services
                 TotalSpent = user.Sales?
                     .SelectMany(s => s.Purchases ?? Enumerable.Empty<Purchase>())
                     .Where(p => p.Ticket != null)
-                    .Sum(p => p.Quantity * p.Ticket!.TicketPrice) ?? 0
+                    .Sum(p => p.Quantity * p.Ticket!.TicketPrice) ?? 0,
+                Fraud = await _context.Frauds.AnyAsync(f => f.UserId == user.UserId)
             };
         }
 
@@ -131,6 +132,7 @@ namespace TicketHub_BackEnd.Services
                 .Include(u => u.Sales)
                     .ThenInclude(s => s.Purchases)
                         .ThenInclude(p => p.Ticket)
+                .Include(u => u.Frauds)
                 .ToListAsync();
 
             return users.Select(u => new UserResponseDto
@@ -150,7 +152,8 @@ namespace TicketHub_BackEnd.Services
                 TotalSpent = u.Sales?
                     .SelectMany(s => s.Purchases ?? Enumerable.Empty<Purchase>())
                     .Where(p => p.Ticket != null)
-                    .Sum(p => p.Quantity * p.Ticket!.TicketPrice) ?? 0
+                    .Sum(p => p.Quantity * p.Ticket!.TicketPrice) ?? 0,
+                Fraud = u.Frauds.Any()
             });
         }
 

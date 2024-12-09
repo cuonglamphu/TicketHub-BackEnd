@@ -37,5 +37,6 @@ namespace TicketHub_BackEnd.DTOs
 
         public string Status { get; set; } = string.Empty;
         public string Message { get; set; } = string.Empty;
+        public bool Fraud { get; set; }
     }
 }

@@ -35,5 +35,6 @@ namespace TicketHub_BackEnd.Models
         public DateTime UserJoinDate { get; set; } = DateTime.Now;
 
         public ICollection<Sale> Sales { get; set; } = new List<Sale>();
+        public ICollection<Fraud> Frauds { get; set; } = new List<Fraud>();
     }
 }
